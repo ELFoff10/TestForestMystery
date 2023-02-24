@@ -1,17 +1,15 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 public class Player : MonoBehaviour
 {
     [SerializeField] private float m_Speed = 3f;
     [SerializeField] private float m_BonusRunSpeed = 3f;
-    [SerializeField] private float m_JumpHeight = 6.5f;
-    [SerializeField] private GameObject m_JumpToPointLeft;
-    [SerializeField] private GameObject m_JumpToPointRight;
+    [SerializeField] private float m_JumpForce = 3f;
 
     private Rigidbody2D m_Rigidbody2D;
     private Vector2 m_MoveVelocity;
-    private SpriteRenderer m_SpriteRenderer;
     private Animator m_Animator;
     private bool m_FacingRight = true;
     private float m_DefoultSpeed;
@@ -19,7 +17,6 @@ public class Player : MonoBehaviour
     private void Start()
     {
         m_Rigidbody2D = GetComponent<Rigidbody2D>();
-        m_SpriteRenderer = GetComponentInChildren<SpriteRenderer>();
         m_Animator = GetComponent<Animator>();
         m_DefoultSpeed = m_Speed;
     }
@@ -32,18 +29,7 @@ public class Player : MonoBehaviour
 
         m_Rigidbody2D.MovePosition(m_Rigidbody2D.position + m_MoveVelocity * Time.deltaTime);
 
-        //var xMotion = m_Rigidbody2D.velocity.x;
-
-        //if (xMotion > 0.01f)
-        //{
-        //    m_SpriteRenderer.flipX = false;
-        //}
-        //else if (xMotion < 0.01f)
-        //{
-        //    m_SpriteRenderer.flipX = true;
-        //}
-
-        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))/*Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0*/
+        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
         {
             m_Animator.SetBool("Run", true);
         }
@@ -52,22 +38,26 @@ public class Player : MonoBehaviour
             m_Animator.SetBool("Run", false);
         }
 
-        if (Input.GetKey(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space))
         {
             m_Animator.SetTrigger("Jump");
 
-            //if (true)
-            //{
-
-            //}
-            //transform.position = Vector3.Slerp(transform.position, )
+            if (m_FacingRight == true)
+            {
+                m_Rigidbody2D.velocity = Vector2.up * m_JumpForce + Vector2.right * m_JumpForce;
+                StartCoroutine(JumpDefoultRight());
+            }
+            if (m_FacingRight == false)
+            {
+                m_Rigidbody2D.velocity = Vector2.up * m_JumpForce - Vector2.right * m_JumpForce;
+                StartCoroutine(JumpDefoultLeft());
+            }
         }
 
         if (Input.GetKeyDown(KeyCode.LeftShift) == true)
         {
             m_Speed += m_BonusRunSpeed;
             // Тут можно включить анимацию бега
-
         }
         else if (Input.GetKeyUp(KeyCode.LeftShift) == true)
         {
@@ -90,5 +80,22 @@ public class Player : MonoBehaviour
         Vector3 scaler = transform.localScale;
         scaler.x *= -1;
         transform.localScale = scaler;
+    }
+
+    IEnumerator JumpDefoultRight()
+    {
+        yield return new WaitForSeconds(0.5f);
+        m_Rigidbody2D.velocity -= Vector2.up * m_JumpForce + Vector2.right * m_JumpForce;
+        m_Rigidbody2D.velocity = Vector2.down * m_JumpForce + Vector2.right * m_JumpForce;
+        yield return new WaitForSeconds(0.5f);
+        m_Rigidbody2D.velocity -= Vector2.down * m_JumpForce + Vector2.right * m_JumpForce;
+    }
+    IEnumerator JumpDefoultLeft()
+    {
+        yield return new WaitForSeconds(0.5f);
+        m_Rigidbody2D.velocity -= Vector2.up * m_JumpForce - Vector2.right * m_JumpForce;
+        m_Rigidbody2D.velocity = Vector2.down * m_JumpForce - Vector2.right * m_JumpForce;
+        yield return new WaitForSeconds(0.5f);
+        m_Rigidbody2D.velocity -= Vector2.down * m_JumpForce - Vector2.right * m_JumpForce;
     }
 }
